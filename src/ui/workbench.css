@@ -1,0 +1,891 @@
+.workbench {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 340px;
+  height: 100%;
+  background: rgba(4, 12, 14, 0.92);
+  border-left: 1px solid rgba(0, 255, 204, 0.15);
+  backdrop-filter: blur(12px);
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 20px;
+  z-index: 100;
+  font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+  color: rgba(0, 255, 204, 0.85);
+  overflow-y: auto;
+}
+
+.workbench.open {
+  transform: translateX(0);
+}
+
+/* Clean native cursor over the panel (overrides the globe's hidden cursor). */
+.workbench {
+  cursor: default;
+}
+
+.workbench summary,
+.workbench button,
+.workbench a,
+.workbench .workbench-close,
+.workbench .workbench-retry {
+  cursor: pointer;
+}
+
+/* While the pointer is over the panel, hide the custom globe reticle cursor. */
+body.ui-hover .reticle-cursor {
+  display: none;
+}
+
+.workbench-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: none;
+  border: 1px solid rgba(0, 255, 204, 0.2);
+  color: rgba(0, 255, 204, 0.6);
+  font-size: 18px;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.workbench-close:hover {
+  border-color: rgba(0, 255, 204, 0.5);
+  color: #00ffcc;
+  box-shadow: 0 0 8px rgba(0, 255, 204, 0.3);
+}
+
+.workbench-title {
+  font-size: 11px;
+  letter-spacing: 3px;
+  opacity: 0.5;
+  margin-bottom: 16px;
+}
+
+.workbench-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.workbench-field {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.workbench-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  opacity: 0.45;
+}
+
+.workbench-value {
+  font-size: 14px;
+  color: #00ffcc;
+  text-shadow: 0 0 6px rgba(0, 255, 204, 0.3);
+}
+
+.workbench-sep {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 255, 204, 0.2),
+    transparent
+  );
+  margin: 18px 0;
+}
+
+.workbench-results-title {
+  font-size: 11px;
+  letter-spacing: 3px;
+  opacity: 0.5;
+  margin-bottom: 12px;
+}
+
+.workbench-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.workbench-placeholder {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  opacity: 0.4;
+  padding: 20px 0;
+}
+
+.workbench-spinner {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid rgba(0, 255, 204, 0.2);
+  border-top-color: rgba(0, 255, 204, 0.7);
+  border-radius: 50%;
+  animation: wb-spin 0.8s linear infinite;
+}
+
+@keyframes wb-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Streaming progress bar */
+.workbench-progress {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.workbench-progress-track {
+  position: relative;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(0, 255, 204, 0.08);
+  overflow: hidden;
+}
+
+.workbench-progress-bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0%;
+  background: linear-gradient(90deg, rgba(0, 255, 204, 0.4), #00ffcc);
+  box-shadow: 0 0 8px rgba(0, 255, 204, 0.5);
+  /* Slow, eased fill so jumps between feed arrivals glide rather than snap. */
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* While actively streaming, sweep a soft sheen over the filled portion. */
+.workbench-progress[data-state="streaming"] .workbench-progress-bar::after,
+.workbench-progress[data-state="querying"] .workbench-progress-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.45),
+    transparent
+  );
+  animation: wb-sweep 1.8s ease-in-out infinite;
+}
+
+.workbench-progress[data-state="complete"] .workbench-progress-bar {
+  background: rgba(0, 255, 204, 0.55);
+}
+
+@keyframes wb-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.workbench-progress-label {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  opacity: 0.45;
+  text-transform: uppercase;
+}
+
+/* Result category groups */
+.workbench-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 14px;
+  /* Group reveals once before its rows cascade in. */
+  animation: wb-group-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.workbench-group-title {
+  font-size: 9px;
+  letter-spacing: 2px;
+  opacity: 0.4;
+  margin-bottom: 2px;
+}
+
+.workbench-group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+@keyframes wb-group-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.workbench-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 6px 8px;
+  border: 1px solid rgba(0, 255, 204, 0.06);
+  border-left-width: 2px;
+  border-radius: 3px;
+  transition: border-color 0.15s;
+}
+
+.workbench-item:hover {
+  border-color: rgba(0, 255, 204, 0.2);
+}
+
+/* New rows slide + fade in slowly; animation-delay is set per-row in JS so a
+   burst of arrivals reads as a calm staggered cascade. */
+.workbench-item-enter {
+  animation: wb-item-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes wb-item-in {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.workbench-item.sev-advisory {
+  border-left-color: rgba(0, 200, 255, 0.5);
+}
+.workbench-item.sev-watch {
+  border-left-color: rgba(255, 210, 0, 0.5);
+}
+.workbench-item.sev-warning {
+  border-left-color: rgba(255, 140, 0, 0.6);
+}
+.workbench-item.sev-critical {
+  border-left-color: rgba(255, 60, 60, 0.7);
+}
+
+.workbench-item-type {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  opacity: 0.4;
+  min-width: 56px;
+  padding-top: 2px;
+}
+
+.workbench-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.workbench-item-name {
+  font-size: 13px;
+}
+
+.workbench-item-source {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 9px;
+  opacity: 0.4;
+}
+
+.workbench-item-dist {
+  color: rgba(0, 255, 204, 0.6);
+}
+
+/* ── Region briefing: 5 reports × 3 lens cards ── */
+.workbench-briefing {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.workbench-report {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: wb-group-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.workbench-report-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--accent, #00ffcc);
+}
+
+.workbench-report-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent, #00ffcc);
+  box-shadow: 0 0 8px var(--accent, #00ffcc);
+}
+
+.workbench-card {
+  position: relative;
+  padding: 9px 11px;
+  border: 1px solid rgba(0, 255, 204, 0.1);
+  border-left: 2px solid var(--accent, rgba(0, 255, 204, 0.3));
+  border-radius: 4px;
+  background: rgba(0, 24, 22, 0.35);
+}
+
+.workbench-card-enter {
+  animation: wb-card-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes wb-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.workbench-card-pending {
+  min-height: 46px;
+  opacity: 0.5;
+}
+
+.workbench-card-pending .workbench-card-head {
+  display: flex;
+  align-items: center;
+  padding-top: 4px;
+}
+
+.workbench-card.state-no-data,
+.workbench-card.state-stale {
+  opacity: 0.55;
+}
+
+.workbench-card.sev-warning {
+  border-left-color: rgba(255, 140, 0, 0.7);
+}
+.workbench-card.sev-critical {
+  border-left-color: rgba(255, 60, 60, 0.8);
+}
+.workbench-card.sev-watch {
+  border-left-color: rgba(255, 210, 0, 0.6);
+}
+
+.workbench-card-lens {
+  font-size: 8px;
+  letter-spacing: 2px;
+  opacity: 0.4;
+  margin-bottom: 4px;
+}
+
+.workbench-card-headline {
+  font-size: 12.5px;
+  color: #d7fff5;
+  line-height: 1.3;
+}
+
+.workbench-card-summary {
+  margin-top: 4px;
+  font-size: 11px;
+  line-height: 1.45;
+  opacity: 0.65;
+}
+
+.workbench-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 7px;
+}
+
+.workbench-chip {
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: rgba(0, 255, 204, 0.08);
+  border: 1px solid rgba(0, 255, 204, 0.15);
+  color: rgba(0, 255, 204, 0.8);
+}
+
+.workbench-chip.sev-warning {
+  color: #ffb060;
+  border-color: rgba(255, 140, 0, 0.4);
+}
+.workbench-chip.sev-critical {
+  color: #ff8080;
+  border-color: rgba(255, 60, 60, 0.5);
+}
+.workbench-chip.sev-watch {
+  color: #ffe070;
+  border-color: rgba(255, 210, 0, 0.4);
+}
+
+.workbench-card-bullets {
+  margin: 7px 0 0;
+  padding-left: 16px;
+  font-size: 10.5px;
+  line-height: 1.5;
+  opacity: 0.6;
+}
+
+.workbench-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.workbench-cites {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.workbench-cite {
+  font-size: 8.5px;
+  letter-spacing: 0.5px;
+  opacity: 0.5;
+  color: rgba(0, 255, 204, 0.7);
+  text-decoration: none;
+  border-bottom: 1px dotted rgba(0, 255, 204, 0.3);
+}
+
+.workbench-cite:hover {
+  opacity: 0.9;
+}
+
+.workbench-card-state {
+  font-size: 8.5px;
+  letter-spacing: 1px;
+  opacity: 0.4;
+  text-transform: uppercase;
+}
+
+.workbench-conf {
+  flex: 0 0 36px;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(0, 255, 204, 0.12);
+  overflow: hidden;
+}
+
+.workbench-conf-bar {
+  display: block;
+  height: 100%;
+  background: rgba(0, 255, 204, 0.6);
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Collapsible request payload view */
+.workbench-payload {
+  margin-top: 14px;
+}
+
+.workbench-payload > summary {
+  font-size: 10px;
+  letter-spacing: 2px;
+  opacity: 0.45;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.workbench-payload > summary:hover {
+  opacity: 0.7;
+}
+
+.workbench-payload-body {
+  margin: 10px 0 0;
+  padding: 10px;
+  max-height: 240px;
+  overflow: auto;
+  background: rgba(0, 20, 18, 0.6);
+  border: 1px solid rgba(0, 255, 204, 0.1);
+  border-radius: 4px;
+  font-size: 10px;
+  line-height: 1.5;
+  color: rgba(0, 255, 204, 0.7);
+  white-space: pre;
+}
+
+.workbench-hint {
+  display: block;
+  margin-top: 8px;
+  font-size: 10px;
+  opacity: 0.45;
+  line-height: 1.4;
+}
+
+.workbench-sources {
+  flex: 0 0 auto;
+  max-height: 38vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 12px;
+}
+
+.workbench-source-cat-name {
+  font-size: 9px;
+  letter-spacing: 2px;
+  opacity: 0.4;
+  margin-bottom: 6px;
+}
+
+.workbench-source-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 5px 6px;
+  border-left: 2px solid rgba(0, 255, 204, 0.12);
+  margin-bottom: 4px;
+}
+
+.workbench-source-name {
+  font-size: 11px;
+  color: rgba(0, 255, 204, 0.75);
+}
+
+.workbench-source-meta {
+  font-size: 9px;
+  opacity: 0.35;
+  word-break: break-all;
+}
+
+/* ── Live status + freshness bar ── */
+.workbench-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.workbench-status {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 255, 204, 0.25);
+  color: rgba(0, 255, 204, 0.85);
+  background: rgba(0, 255, 204, 0.06);
+}
+
+.workbench-status[data-state="querying"],
+.workbench-status[data-state="synthesizing"],
+.workbench-status[data-state="fetching"] {
+  border-color: rgba(0, 200, 255, 0.4);
+  color: #6fdcff;
+  animation: wb-pulse 1.3s ease-in-out infinite;
+}
+
+.workbench-status[data-state="live"] {
+  border-color: rgba(57, 217, 138, 0.5);
+  color: #5ce6a0;
+}
+
+.workbench-status[data-state="stale"] {
+  border-color: rgba(255, 210, 0, 0.5);
+  color: #ffe070;
+}
+
+.workbench-status[data-state="degraded"] {
+  border-color: rgba(255, 90, 90, 0.5);
+  color: #ff8a8a;
+}
+
+@keyframes wb-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.workbench-fresh {
+  font-size: 9px;
+  letter-spacing: 1px;
+  opacity: 0.5;
+  text-transform: uppercase;
+}
+
+/* Per-card freshness tag */
+.workbench-freshtag {
+  margin-left: 8px;
+  letter-spacing: 0.5px;
+}
+.workbench-freshtag.fresh {
+  color: rgba(92, 230, 160, 0.8);
+}
+.workbench-freshtag.recent {
+  color: rgba(255, 224, 112, 0.8);
+}
+.workbench-freshtag.stale {
+  color: rgba(255, 138, 138, 0.75);
+}
+
+/* ── Collapsible sections (lazy DOM) ── */
+.workbench-collapsible {
+  margin-top: 2px;
+}
+
+.workbench-collapsible > summary {
+  font-size: 11px;
+  letter-spacing: 3px;
+  opacity: 0.5;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.workbench-collapsible > summary:hover {
+  opacity: 0.8;
+}
+
+.workbench-collapsible[open] > summary {
+  margin-bottom: 12px;
+}
+
+.workbench-summary-meta {
+  letter-spacing: 1px;
+  opacity: 0.5;
+  font-size: 9px;
+}
+.workbench-summary-meta.has-error {
+  color: #ff8a8a;
+  opacity: 0.9;
+}
+
+/* ── Aggregate health score ── */
+.workbench-health {
+  margin-bottom: 8px;
+}
+
+.workbench-health-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  margin-bottom: 5px;
+}
+
+.workbench-health-score {
+  color: #d7fff5;
+  letter-spacing: 0.5px;
+}
+
+/* Compact inline count pills (preserve panel height). */
+.workbench-health-pills {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.workbench-health-pills .hp {
+  font-size: 9px;
+  min-width: 16px;
+  text-align: center;
+  padding: 0 5px;
+  border-radius: 8px;
+  line-height: 15px;
+}
+.workbench-health-pills .hp.healthy {
+  color: #5ce6a0;
+  background: rgba(57, 217, 138, 0.12);
+}
+.workbench-health-pills .hp.degraded {
+  color: #ffe070;
+  background: rgba(255, 210, 0, 0.12);
+}
+.workbench-health-pills .hp.offline {
+  color: #ff8a8a;
+  background: rgba(255, 90, 90, 0.12);
+}
+
+.workbench-health-track {
+  position: relative;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 90, 90, 0.18);
+  overflow: hidden;
+}
+
+.workbench-health-track > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(57, 217, 138, 0.6), #5ce6a0);
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ── Location-changed banner ── */
+.workbench-banner {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: #ffd27a;
+  border-left: 2px solid rgba(255, 200, 80, 0.6);
+  background: rgba(255, 180, 40, 0.08);
+  border-radius: 3px;
+  transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+  padding: 0 8px;
+}
+.workbench-banner.show {
+  max-height: 40px;
+  opacity: 1;
+  padding: 7px 8px;
+  margin-bottom: 12px;
+}
+
+/* Slow-cycling report next-refresh clock */
+.workbench-report-hint {
+  margin-left: auto;
+  font-size: 8.5px;
+  letter-spacing: 0.5px;
+  opacity: 0.5;
+  text-transform: none;
+}
+
+/* Subtle progress treatment for background refreshes vs initial collection */
+.workbench-progress.refresh .workbench-progress-bar {
+  transition: width 1s ease;
+}
+.workbench-progress.refresh .workbench-progress-bar::after {
+  animation-duration: 3s;
+  opacity: 0.4;
+}
+
+/* ── Per-feed status rows (virtualized) ── */
+.workbench-feeds {
+  position: relative;
+  max-height: 34vh;
+  overflow-y: auto;
+}
+
+.workbench-feeds-inner {
+  display: block;
+}
+
+.workbench-feed-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-left: 2px solid rgba(0, 255, 204, 0.15);
+  border-radius: 2px;
+  box-sizing: border-box;
+}
+
+.workbench-feed-badge {
+  font-size: 8px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(0, 255, 204, 0.1);
+  color: rgba(0, 255, 204, 0.7);
+  flex: 0 0 auto;
+}
+
+.workbench-feed-row.health-healthy {
+  border-left-color: rgba(57, 217, 138, 0.45);
+}
+.workbench-feed-row.health-healthy .workbench-feed-badge {
+  background: rgba(57, 217, 138, 0.14);
+  color: #5ce6a0;
+}
+.workbench-feed-row.health-degraded {
+  border-left-color: rgba(255, 210, 0, 0.55);
+}
+.workbench-feed-row.health-degraded .workbench-feed-badge {
+  background: rgba(255, 210, 0, 0.14);
+  color: #ffe070;
+}
+.workbench-feed-row.health-offline {
+  border-left-color: rgba(255, 90, 90, 0.6);
+}
+.workbench-feed-row.health-offline .workbench-feed-badge {
+  background: rgba(255, 90, 90, 0.15);
+  color: #ff9a9a;
+}
+
+.workbench-feed-name {
+  font-size: 10.5px;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workbench-feed-detail {
+  font-size: 9px;
+  opacity: 0.5;
+  flex: 0 0 auto;
+}
+
+.workbench-retry {
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 1px 7px;
+  border-radius: 3px;
+  background: none;
+  border: 1px solid rgba(255, 138, 138, 0.4);
+  color: #ff9a9a;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.workbench-retry:hover {
+  border-color: rgba(255, 138, 138, 0.8);
+  box-shadow: 0 0 6px rgba(255, 90, 90, 0.3);
+}
+
+/* One deduped source-link row per report */
+.workbench-report-cites {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-left: 2px;
+  margin-top: 2px;
+}
+.workbench-report-cites:empty {
+  display: none;
+}
+.workbench-report-cites .workbench-cite {
+  font-size: 8.5px;
+  letter-spacing: 0.5px;
+  opacity: 0.5;
+  color: rgba(0, 255, 204, 0.7);
+  text-decoration: none;
+  border-bottom: 1px dotted rgba(0, 255, 204, 0.3);
+}
+.workbench-report-cites .workbench-cite:hover {
+  opacity: 0.9;
+}

@@ -1,0 +1,12 @@
+:80 {
+	root * /srv
+	encode gzip zstd
+
+	# Long-cache the fingerprinted assets and the bundled map data.
+	@assets path /assets/* /data/* /countries-110m.json
+	header @assets Cache-Control "public, max-age=31536000, immutable"
+
+	# SPA fallback so deep links resolve to index.html.
+	try_files {path} /index.html
+	file_server
+}

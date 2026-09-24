@@ -1,0 +1,74 @@
+{
+  "title": "Official Live Feed Catalog",
+  "generated": "2026-05-31",
+  "doc": "FEED_CATALOG.md",
+  "polling": {
+    "intervalSec": 3600,
+    "userAgent": "WorldNav/1.0 (contact@example.com)"
+  },
+  "categories": [
+    {
+      "id": "environmental",
+      "name": "Environmental sensors",
+      "feeds": [
+        { "name": "Open-Meteo Weather", "provider": "Open-Meteo", "format": "JSON", "endpoint": "https://api.open-meteo.com/v1/forecast" },
+        { "name": "Open-Meteo Air Quality", "provider": "Open-Meteo", "format": "JSON", "endpoint": "https://air-quality-api.open-meteo.com/v1/air-quality" },
+        { "name": "Open-Meteo Marine", "provider": "Open-Meteo", "format": "JSON", "endpoint": "https://marine-api.open-meteo.com/v1/marine" },
+        { "name": "Open-Meteo Flood / River", "provider": "Open-Meteo (GloFAS)", "format": "JSON", "endpoint": "https://flood-api.open-meteo.com/v1/flood" },
+        { "name": "NWS Point Forecast", "provider": "NOAA NWS", "format": "JSON", "endpoint": "https://api.weather.gov/points/{lat},{lon}" },
+        { "name": "USGS Streamflow", "provider": "USGS", "format": "JSON", "endpoint": "https://waterservices.usgs.gov/nwis/iv/" },
+        { "name": "NOAA CO-OPS Tides", "provider": "NOAA CO-OPS", "format": "JSON", "endpoint": "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter" },
+        { "name": "NOAA NDBC Buoy", "provider": "NOAA NDBC", "format": "CSV", "endpoint": "https://www.ndbc.noaa.gov/data/latest_obs/latest_obs.txt" },
+        { "name": "Aviation METAR", "provider": "NOAA AWC", "format": "JSON", "endpoint": "https://aviationweather.gov/api/data/metar" },
+        { "name": "Aviation TAF", "provider": "NOAA AWC", "format": "JSON", "endpoint": "https://aviationweather.gov/api/data/taf" },
+        { "name": "NOAA SWPC K-index", "provider": "NOAA SWPC", "format": "JSON", "endpoint": "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json" },
+        { "name": "NOAA SWPC Solar Wind", "provider": "NOAA SWPC", "format": "JSON", "endpoint": "https://services.swpc.noaa.gov/products/solar-wind/mag-1-day.json" },
+        { "name": "WAQI Air Quality", "provider": "WAQI", "format": "JSON", "endpoint": "https://api.waqi.info/feed/geo:{lat};{lon}/", "note": "demo token rate-limited" }
+      ]
+    },
+    {
+      "id": "safety",
+      "name": "Public safety & alerts",
+      "feeds": [
+        { "name": "NWS Active Alerts", "provider": "NOAA NWS", "format": "GeoJSON", "endpoint": "https://api.weather.gov/alerts/active" },
+        { "name": "USGS Earthquakes (hour)", "provider": "USGS", "format": "GeoJSON", "endpoint": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson" },
+        { "name": "EMSC Seismic", "provider": "EMSC", "format": "GeoJSON", "endpoint": "https://www.seismicportal.eu/fdsnws/event/1/query" },
+        { "name": "USGS Volcano Alerts", "provider": "USGS", "format": "JSON", "endpoint": "https://volcanoes.usgs.gov/vsc/api/volcanoApi/elevated" },
+        { "name": "NASA EONET Events", "provider": "NASA EONET", "format": "JSON", "endpoint": "https://eonet.gsfc.nasa.gov/api/v3/events" },
+        { "name": "NOAA NHC Cyclones", "provider": "NOAA NHC", "format": "JSON", "endpoint": "https://www.nhc.noaa.gov/CurrentStorms.json" },
+        { "name": "GDACS Disasters", "provider": "GDACS", "format": "RSS", "endpoint": "https://www.gdacs.org/xml/rss.xml" }
+      ]
+    },
+    {
+      "id": "civic",
+      "name": "Government & civic",
+      "feeds": [
+        { "name": "Federal Register", "provider": "GPO / NARA", "format": "JSON", "endpoint": "https://www.federalregister.gov/api/v1/documents.json" },
+        { "name": "GovInfo Bills RSS", "provider": "US GPO", "format": "RSS", "endpoint": "https://www.govinfo.gov/rss/bills.xml" },
+        { "name": "SEC EDGAR Filings", "provider": "US SEC", "format": "Atom", "endpoint": "https://www.sec.gov/cgi-bin/browse-edgar", "note": "requires User-Agent" },
+        { "name": "Congress.gov RSS", "provider": "Library of Congress", "format": "RSS", "endpoint": "https://www.congress.gov/rss/presented-to-president.xml" },
+        { "name": "USAspending", "provider": "US Treasury", "format": "JSON", "endpoint": "https://api.usaspending.gov/api/v2/references/toptier_agencies/" }
+      ]
+    },
+    {
+      "id": "transit",
+      "name": "Transit & infrastructure",
+      "feeds": [
+        { "name": "MBTA Realtime", "provider": "MBTA", "format": "JSON:API", "endpoint": "https://api-v3.mbta.com/alerts" },
+        { "name": "MBTA GTFS-RT", "provider": "MBTA", "format": "GTFS-RT", "endpoint": "https://cdn.mbta.com/realtime/" },
+        { "name": "TfL Tube Status", "provider": "Transport for London", "format": "JSON", "endpoint": "https://api.tfl.gov.uk/Line/Mode/tube/Status" },
+        { "name": "GBFS Bikeshare", "provider": "GBFS / MobilityData", "format": "GBFS JSON", "endpoint": "https://gbfs.capitalbikeshare.com/gbfs/gbfs.json" },
+        { "name": "OpenSky ADS-B", "provider": "OpenSky Network", "format": "JSON", "endpoint": "https://opensky-network.org/api/states/all" }
+      ]
+    },
+    {
+      "id": "map",
+      "name": "Map geometry (local)",
+      "feeds": [
+        { "name": "Natural Earth coastlines", "provider": "Natural Earth / world-atlas", "format": "TopoJSON", "endpoint": "/countries-110m.json" },
+        { "name": "Natural Earth transport", "provider": "Natural Earth", "format": "GeoJSON", "endpoint": "/data/ne_10m_roads.geojson" },
+        { "name": "OpenStreetMap buildings", "provider": "OpenStreetMap via Overpass", "format": "OSM JSON", "endpoint": "https://overpass.kumi.systems/api/interpreter" }
+      ]
+    }
+  ]
+}
